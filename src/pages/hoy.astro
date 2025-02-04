@@ -34,7 +34,7 @@ import Layout from '../layouts/LayoutBlank.astro';
 			let dia = new Date();
 			labelDia.innerHTML = obtenerNombreDia(dia.getDay());
 
-			fetch("/horarios.json")
+			fetch("horarios.json")
 			.then(response => response.json())
 			.then(data => {
 				datos = data.datos;

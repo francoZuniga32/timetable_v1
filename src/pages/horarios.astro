@@ -55,7 +55,7 @@ import Layout from "../layouts/Layout.astro";
 		function consultarHorarios(){
 			
 
-			fetch("/horarios.json")
+			fetch("horarios.json")
 			.then(response => response.json())
 			.then(data => {
 				datos = data.datos;

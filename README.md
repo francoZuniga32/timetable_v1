@@ -13,3 +13,8 @@ npm run dev
 
 la carpeta `dist` contendra la aplicacion lista para poder ser publicada en un servidor http.
 
+## Capturas de pantalla
+
+![alt text](horarios_hoy.png)
+
+![alt text](por_filtros.png)

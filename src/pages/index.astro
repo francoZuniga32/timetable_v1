@@ -1,11 +1,38 @@
 ---
 import Welcome from '../components/Welcome.astro';
 import Layout from '../layouts/Layout.astro';
+import Tablon from '../components/Tablon.astro';
 
 // Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
 // Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
 ---
 
 <Layout>
-	<Welcome />
+	<h1 class="text-center bg-clip-text text-transparent bg-gradient-to-r from-teal-500 to-sky-900 font-bold">Time Table V1</h1>
+	<p>
+		Time table es una aplicacion web contruida en astro.build cuyo objetivo es listar un tablon de horarios facil de implementar y desplegar.
+	</p>
+	<p>
+		Puedes configuralo desde un archivo json ubicado en public/horarios.json
+	</p>
+	<Tablon></Tablon>
+	<p>En horarios hoy puede ver el tablon de horarios en tiempo real, marcando las materias que ocurren en ese momento, en horarios podra consultar por dia, y horarios de inicio y fin</p>
+	<h2 class="text-center bg-clip-text text-transparent bg-gradient-to-r from-teal-500 to-sky-900 font-bold">Instalacion</h2>
+	<div class="border-2 rounded-xl p-2 bg-gray-900 text-white">
+		<p class="text-orange-400">#clonar </p>
+		<p>git clone ... </p>
+		<p class="text-orange-400">#Instalar</p>
+		<p>npm install</p>
+		<p class="text-orange-400">#editar public.json</p>
+		<p>...</p>
+		<p class="text-orange-400">#compilar y publicar</p>
+		<p>npm run build</p>
+	</div>
+
+	<h3 class="text-center bg-clip-text text-transparent bg-gradient-to-r from-teal-500 to-sky-900 font-bold">Github Page</h3>
+	<p>Para publicarlo en github page, tendra que cambiar el nombre de la carpeta dist a docs, y renombrar la carpeta /_astro/ por /astro/, ademas de cambiar la ruta en los archivos .html</p>
 </Layout>
+
+<style>
+	
+</style>

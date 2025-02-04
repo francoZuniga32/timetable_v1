@@ -10,10 +10,7 @@ import HeaderLink from '../components/Header.astro'
 		<BaseHead title="time table v1" description="v1 del sistema time table" />
 	</head>
 	<body>
-		<HeaderLink></HeaderLink>
-		<main>
-			<slot />
-		</main>
+		<slot />
 	</body>
 </html>
 
@@ -23,10 +20,5 @@ import HeaderLink from '../components/Header.astro'
 		margin: 0;
 		width: 100%;
 		height: 100%;
-	}
-
-	main{
-		max-width: 1000px;
-		margin:auto;
 	}
 </style>

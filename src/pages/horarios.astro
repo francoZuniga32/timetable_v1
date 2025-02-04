@@ -1,0 +1,198 @@
+---
+import Layout from "../layouts/Layout.astro";
+---
+
+<Layout>
+    <main >
+        <div class="border-2 p-5 flex flex-row flex-wrap rounded-2xl shadow-md mb-3">
+            <div class="w-1/2 flex flex-col p-1">
+                <label>Dia</label>
+                <select class="w-auto border rounded-sm p-1" id="diaselect">
+                    <option value="">Seleccionar dia.</option>
+                    <option value="0">Domingo</option>
+                    <option value="1">Lunes</option>
+                    <option value="2">Martes</option>
+                    <option value="3">Miercoles</option>
+                    <option value="4">Jueves</option>
+                    <option value="5">Viernes</option>
+                    <option value="6">Sabado</option>
+                </select>
+            </div>
+            <div class="w-1/2 flex flex-col p-1">
+                <label>Hora Inicio</label>
+                <input class="w-auto border rounded-sm p-1" type="time" id="horainicio">
+            </div>
+            <div class="w-1/2 flex flex-col p-1">
+                <label>Hora Fin</label>
+                <input class="w-auto border rounded-sm p-1" type="time" id="horafin">
+            </div>
+            <div class="w-full flex flex-col p-1">
+                <button class="bg-green-400 hover:bg-green-500 rounded-2xl w-32 text-white" type="button" onclick="filtrar()">Filtrar</button>
+            </div>
+        </div>
+		<div class="border-2 p-5 rounded-2xl shadow-md">
+			<h1 class="text-center text-3xl" id="dialabel"></h1>
+			<h1 class="text-center text-2xl" id="horalabel"></h1>
+			<table>
+				<thead>
+					<tr>
+						<th>Descripcion</th>
+						<th>Hora Inicio</th>
+						<th>Hora Fin</th>
+						<th>Estado</th>
+					</tr>
+				</thead>
+				<tbody id="horarios">
+					
+				</tbody>
+			</table>
+		</div>
+	</main>
+	<script is:inline>
+		var datos;
+		consultarHorarios();
+		
+		function consultarHorarios(){
+			
+
+			fetch("/horarios.json")
+			.then(response => response.json())
+			.then(data => {
+				datos = data.datos;
+				filtrarHoy(datos);
+			});
+
+		}
+
+		function actualizarReloj(){
+			let labelHora = document.getElementById("horalabel");
+			let dia = new Date();
+			labelHora.innerHTML = dia.getHours()+":"+dia.getMinutes();
+			console.log("hora actualizada...");
+		}
+		
+		function filtrarHoy(datos){
+            //por defecto mostramos el dia lunes
+			let dia = (document.getElementById("diaselect").value != "")? document.getElementById("diaselect").value : 1 ;
+            let horainicio = (document.getElementById("horainicio").value != "")? document.getElementById("horainicio").value : '00:01';
+            let horafin = (document.getElementById("horafin").value != "")? document.getElementById("horafin").value : '23:59';
+
+            console.log(dia, horainicio, horafin);
+
+			datos.sort(compareFn);
+            datos.forEach(x => {
+                console.log(obtenerNumeroDia(x.dia) == dia , compareHora(x.horainicio, horainicio) >= 0 , compareHora(x.horafin, horafin) <= 0)
+            })
+			horarios = datos.filter(x => (obtenerNumeroDia(x.dia) == dia && compareHora(x.horainicio, horainicio) >= 0 && compareHora(x.horafin, horafin) <= 0) );
+            console.log(horarios);
+			document.getElementById("horarios").innerHTML = "";
+
+			horarios.forEach(horario => {
+				document.getElementById("horarios").innerHTML += obtenerFilaNormal(horario);
+			});
+		}
+
+        function filtrar(){
+            filtrarHoy(datos);
+        }
+
+		function evaluarHora(dato){
+			let horaActual = (new Date()).getHours();
+			let minutoActual = (new Date()).getMinutes();
+
+			let horaInicioDato = dato.horainicio.split(":")[0];
+			let minutoInicioDato = dato.horainicio.split(":")[1];
+
+			let horaFinDato = dato.horafin.split(":")[0];
+			let minutoFinDato = dato.horafin.split(":")[1];
+
+			console.log(horaActual, minutoActual, horaInicioDato, minutoInicioDato, horaFinDato, minutoFinDato);
+
+			//si la hora actual esta entre las hora fin y inicio, entonces marcamos true.
+			let retorno = parseInt(horaActual) >= parseInt(horaInicioDato) && parseInt(horaActual) <= parseInt(horaFinDato);
+			//en caso de que la hora fin sea igua a la hora actual
+			if(retorno && parseInt(horaActual) == parseInt(horaFinDato)){
+				retorno = parseInt(minutoActual) <= parseInt(minutoFinDato);
+			}
+			return retorno;
+		}
+
+		function compareFn(a, b){
+            return compareHora(a.horainicio, b.horainicio);
+		}
+
+        function compareHora(a, b){
+            let horaInicioA = parseInt(a.split(":")[0]);
+			let minutoInicioA = parseInt(a.split(":")[1]);
+
+			let horaInicioB = parseInt(b.split(":")[0]);
+			let minutoInicioB = parseInt(b.split(":")[1]);
+			let retorno = 0;
+
+			if(horaInicioA < horaInicioB){
+				retorno = -1;
+			}else if(horaInicioA == minutoInicioB && minutoInicioA < minutoInicioB){
+				retorno = -1;
+			}else if(horaInicioA > horaInicioB){
+				retorno = 1;
+			}else if(horaInicioA == minutoInicioB && minutoInicioA > minutoInicioB){
+				retorno = 1;
+			}
+			console.log(retorno);
+			return retorno;
+        }
+
+		function obtenerFilaVerde(data){
+			return `
+				<tr class="bg-green-200 px-4 py-1">
+					<td>${data.descripcion}</td>
+					<td>${data.horainicio}</td>
+					<td>${data.horafin}</td>
+					<td>
+						${labelEstado(data.estado)}
+					</td>
+				</tr>
+				`;
+		}
+
+		function obtenerFilaNormal(data){
+			return `
+				<tr class="bg-gray-100 px-4 py-1">
+					<td>${data.descripcion}</td>
+					<td>${data.horainicio}</td>
+					<td>${data.horafin}</td>
+					<td>
+                        ${labelEstado(data.estado)}
+					</td>
+				</tr>
+				`;
+		}
+
+        function labelEstado(estado){
+			switch(estado){
+				case "normal":
+					return `<b class="px-4 py-1 rounded-sm bg-green-500 text-gray-100">Normal</b>`;
+					break;
+				case "demorado":
+					return `<b class="px-4 py-1 rounded-sm bg-amber-400 text-gray-100">Demorado</b>`;
+					break;
+				case "cancelado":
+					return `<b class="px-4 py-1 rounded-sm bg-red-400 text-gray-100">Demorado</b>`;
+					break;
+				case "evento":
+					return `<b class="px-4 py-1 rounded-sm bg-indigo-400 text-gray-100">Evento</b>`
+					break;
+			}
+		}
+
+		function obtenerNumeroDia(weekday) {
+			const dias = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
+			return dias.indexOf(weekday.toLowerCase());
+		}
+
+		function obtenerNombreDia(numero) {
+			const dias = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
+			return dias[numero] || "Número inválido";
+		}
+	</script>
+</Layout>

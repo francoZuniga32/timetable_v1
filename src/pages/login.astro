@@ -51,7 +51,19 @@ const urlbackend = import.meta.env.PUBLIC_BACKEND;
                 }
             })
             .catch(function (error) {
-                console.log(error);
+                Toastify({
+                    text: "El usuario o la contraseña son incorrectos",
+                    duration: 3000,
+                    destination: "https://github.com/apvarun/toastify-js",
+                    newWindow: true,
+                    close: true,
+                    gravity: "top", // `top` or `bottom`
+                    position: "rigth", // `left`, `center` or `right`
+                    stopOnFocus: true, // Prevents dismissing of toast on hover
+                    style: {
+                        background: "var(--color-red-400)",
+                    },
+                }).showToast();
             });
     }
 </script>

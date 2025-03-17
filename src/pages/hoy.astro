@@ -1,8 +1,11 @@
 ---
 import Layout from '../layouts/LayoutBlank.astro';
+const urlbackend = import.meta.env.PUBLIC_BACKEND;
 
 ---
 <Layout>
+	<input type="hidden" value={urlbackend} id="urlbackend">
+
 	<main >
 		<div class="border-2 p-5 rounded-2xl shadow-md">
 			<h1 class="text-center text-3xl" id="dialabel"></h1>
@@ -21,23 +24,25 @@ import Layout from '../layouts/LayoutBlank.astro';
 				</tbody>
 			</table>
 		</div>
+		
 	</main>
 	<script is:inline>
-		var datos;
+		let backend = document.getElementById("urlbackend").value;
 		consultarHorarios();
 		actualizarReloj();
 		setInterval(consultarHorarios, 900000);
 		setInterval(actualizarReloj, 60000);
-
+				
 		function consultarHorarios(){
 			let labelDia = document.getElementById("dialabel");
 			let dia = new Date();
 			labelDia.innerHTML = obtenerNombreDia(dia.getDay());
 
-			fetch("horarios.json")
+			fetch(`${backend}/horarios`)
 			.then(response => response.json())
 			.then(data => {
-				datos = data.datos;
+				
+				datos = data;
 				filtrarHoy(datos);
 			});
 
@@ -143,7 +148,7 @@ import Layout from '../layouts/LayoutBlank.astro';
 					<td>${data.horainicio}</td>
 					<td>${data.horafin}</td>
 					<td>
-						<b class="px-4 py-1 rounded-sm bg-green-500 text-gray-100">Normal</b>
+						${labelEstado(data.estado)}
 					</td>
 				</tr>
 				`;
@@ -171,7 +176,7 @@ import Layout from '../layouts/LayoutBlank.astro';
 					return `<b class="px-4 py-1 rounded-sm bg-amber-400 text-gray-100">Demorado</b>`;
 					break;
 				case "cancelado":
-					return `<b class="px-4 py-1 rounded-sm bg-red-400 text-gray-100">Demorado</b>`;
+					return `<b class="px-4 py-1 rounded-sm bg-red-400 text-gray-100">Cancelado</b>`;
 					break;
 				case "evento":
 					return `<b class="px-4 py-1 rounded-sm bg-indigo-400 text-gray-100">Evento</b>`

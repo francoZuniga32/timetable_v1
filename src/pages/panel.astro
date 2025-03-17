@@ -1,0 +1,490 @@
+---
+import Layout from "../layouts/Layout.astro";
+const urlbackend = import.meta.env.PUBLIC_BACKEND;
+
+---
+
+<Layout>
+    <input type="hidden" value={urlbackend} id="urlbackend">
+    <main>
+        <div
+            class="border-2 p-5 flex flex-row flex-wrap rounded-2xl shadow-md mb-3"
+        >
+            <div class="w-1/2 flex flex-col p-1">
+                <label>Dia</label>
+                <select class="w-auto border rounded-sm p-1" id="diaselect">
+                    <option value="">Seleccionar dia.</option>
+                    <option value="0">Domingo</option>
+                    <option value="1">Lunes</option>
+                    <option value="2">Martes</option>
+                    <option value="3">Miercoles</option>
+                    <option value="4">Jueves</option>
+                    <option value="5">Viernes</option>
+                    <option value="6">Sabado</option>
+                </select>
+            </div>
+            <div class="w-1/2 flex flex-col p-1">
+                <label>Descripcion</label>
+                <input
+                    class="w-auto border rounded-sm p-1"
+                    type="text"
+                    id="descripcion"
+                />
+            </div>
+            <div class="w-1/2 flex flex-col p-1">
+                <label>Hora Inicio</label>
+                <input
+                    class="w-auto border rounded-sm p-1"
+                    type="time"
+                    id="horainicio"
+                />
+            </div>
+            <div class="w-1/2 flex flex-col p-1">
+                <label>Hora Fin</label>
+                <input
+                    class="w-auto border rounded-sm p-1"
+                    type="time"
+                    id="horafin"
+                />
+            </div>
+            <div class="w-1/2 flex flex-col p-1">
+                <label>Estado</label>
+                <select class="w-auto border rounded-sm p-1" id="estado">
+                    <option value="normal">Normal</option>
+                    <option value="demorado">Demorado</option>
+                    <option value="cancelado">Cancelado</option>
+                    <option value="evento">Evento</option>
+                </select>
+            </div>
+            <div class="w-full flex flex-row gap-x-px p-1">
+                <button
+                    class="bg-green-400 hover:bg-green-500 rounded-2xl w-32 text-white"
+                    type="button"
+                    onclick="filtrar()">Filtrar</button
+                >
+                <button class="bg-green-400 hover:bg-green-500 rounded-2xl w-32 text-white" type="button" onclick="limpiarFiltros()">Limpiar</button>
+                <button
+                    class="bg-green-400 hover:bg-green-500 rounded-2xl w-32 text-white"
+                    type="button"
+                    id="boton_accion"
+                    onclick="agregar()">Agregar</button
+                >
+            </div>
+        </div>
+        <div class="border-2 p-5 rounded-2xl shadow-md">
+            <h1 class="text-center text-3xl" id="dialabel"></h1>
+            <h1 class="text-center text-2xl" id="horalabel"></h1>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Descripcion</th>
+                        <th>Hora Inicio</th>
+                        <th>Hora Fin</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody id="horarios"> </tbody>
+            </table>
+        </div>
+    </main>
+</Layout>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+<script is:inline>
+    if (!window.localStorage.getItem("token")) {
+        window.location.href = "login";
+    }
+
+    let backend = document.getElementById("urlbackend").value;
+    consultarHorarios();
+
+    function consultarHorarios() {
+        fetch(`${backend}/horarios`)
+            .then((response) => response.json())
+            .then((data) => {
+                datos = data;
+                filtrarHoy(datos);
+            });
+    }
+    let id = null;
+
+    function agregar() {
+        if(validar()){
+            
+        const options = {
+            method: "POST",
+            url: `${backend}/horarios`,
+            headers: {
+                "access-token": window.localStorage.getItem("token"),
+                "content-type": "application/json",
+            },
+            data: {
+                descripcion: document.getElementById("descripcion").value,
+                dia: obtenerNombreDia(
+                    document.getElementById("diaselect").value,
+                ),
+                horainicio: document.getElementById("horainicio").value,
+                horafin: document.getElementById("horafin").value,
+                estado: document.getElementById("estado").value,
+            },
+        };
+
+        try {
+            axios
+                .request(options)
+                .then(function (response) {
+
+                    filtrarHoy();
+                })
+                .catch(function (error) {
+                    console.log(error);
+                });
+        } catch (error) {
+            console.error(error);
+        }
+        }
+    }
+
+    function edit(idedit) {
+        id = idedit;
+        let horario = datos.filter((x) => x.id == idedit)[0];
+        document.getElementById("descripcion").value = horario.descripcion;
+        document.getElementById("diaselect").value = obtenerNumeroDia(
+            horario.dia,
+        );
+        document.getElementById("horainicio").value =
+            horario.horainicio.substring(0, 5);
+        document.getElementById("horafin").value = horario.horafin.substring(
+            0,
+            5,
+        );
+        document.getElementById("estado").value = horario.estado;
+        document
+            .getElementById("boton_accion")
+            .setAttribute("onclick", "editarHorario()");
+        document.getElementById("boton_accion").innerHTML = "Actualizar";
+    }
+
+    function remove(id) {
+        id = id;
+        if (confirm("¿Desea eliminar el horario?")) {
+            const options = {
+                method: "DELETE",
+                headers: {
+                    "access-token": window.localStorage.getItem("token"),
+                    "content-type": "application/json",
+                },
+                url: `${backend}/horarios/${id}`,
+            };
+            axios
+                .request(options)
+                .then(function (response) {
+                    consultarHorarios();
+                })
+                .catch((err) => {
+                    console.error(err);
+                });
+        }
+    }
+
+    function editarHorario() {
+        if(validar()){
+        const options = {
+            method: "PUT",
+            url: `${backend}/horarios/${id}`,
+            headers: {
+                "access-token": window.localStorage.getItem("token"),
+                "content-type": "application/json",
+            },
+            data: {
+                descripcion: document.getElementById("descripcion").value,
+                dia: obtenerNombreDia(
+                    document.getElementById("diaselect").value,
+                ),
+                horainicio: document.getElementById("horainicio").value,
+                horafin: document.getElementById("horafin").value,
+                estado: document.getElementById("estado").value,
+            },
+        };
+
+        axios
+            .request(options)
+            .then(function (response) {
+                limpiarFiltros();
+            })
+            .catch(function (error) {
+                console.log(error);
+            });
+        }
+    }
+
+    function limpiarFiltros(){
+        document.getElementById("descripcion").value = "";
+        document.getElementById("horainicio").value = "";
+        document.getElementById("horafin").value = "";
+        document.getElementById("estado").value = "";
+        document
+            .getElementById("boton_accion")
+            .setAttribute("onclick", "agregar()");
+        document.getElementById("boton_accion").innerHTML = "Agregar";
+        consultarHorarios();
+    }
+
+    function actualizarReloj() {
+        let labelHora = document.getElementById("horalabel");
+        let dia = new Date();
+        labelHora.innerHTML = dia.getHours() + ":" + dia.getMinutes();
+        console.log("hora actualizada...");
+    }
+
+    function filtrarHoy(datos) {
+        //por defecto mostramos el dia lunes
+        let dia =
+            document.getElementById("diaselect").value != ""
+                ? document.getElementById("diaselect").value
+                : 1;
+        let horainicio =
+            document.getElementById("horainicio").value != ""
+                ? document.getElementById("horainicio").value
+                : "00:00";
+        let horafin =
+            document.getElementById("horafin").value != ""
+                ? document.getElementById("horafin").value
+                : "23:59";
+
+        console.log(dia, horainicio, horafin);
+
+        datos.sort(compareFn);
+
+        datos.forEach((x) => {
+            console.log(x.descripcion,
+                obtenerNumeroDia(x.dia) == dia,
+                compareHora(x.horainicio, horainicio) >= 0,
+                compareHora(x.horafin, horafin) <= 0,
+            );
+        });
+        horarios = datos.filter(
+            (x) =>
+                obtenerNumeroDia(x.dia) == dia &&
+                compareHora(x.horainicio, horainicio) >= 0 &&
+                compareHora(x.horafin, horafin) <= 0,
+        );
+        console.log(horarios);
+        document.getElementById("horarios").innerHTML = "";
+
+        horarios.forEach((horario) => {
+            document.getElementById("horarios").innerHTML +=
+                obtenerFilaNormal(horario);
+        });
+    }
+
+    function filtrar() {
+        filtrarHoy(datos);
+    }
+
+    function evaluarHora(dato) {
+        let horaActual = new Date().getHours();
+        let minutoActual = new Date().getMinutes();
+
+        let horaInicioDato = dato.horainicio.split(":")[0];
+        let minutoInicioDato = dato.horainicio.split(":")[1];
+
+        let horaFinDato = dato.horafin.split(":")[0];
+        let minutoFinDato = dato.horafin.split(":")[1];
+
+        console.log(
+            horaActual,
+            minutoActual,
+            horaInicioDato,
+            minutoInicioDato,
+            horaFinDato,
+            minutoFinDato,
+        );
+
+        //si la hora actual esta entre las hora fin y inicio, entonces marcamos true.
+        let retorno =
+            parseInt(horaActual) >= parseInt(horaInicioDato) &&
+            parseInt(horaActual) <= parseInt(horaFinDato);
+        //en caso de que la hora fin sea igua a la hora actual
+        if (retorno && parseInt(horaActual) == parseInt(horaFinDato)) {
+            retorno = parseInt(minutoActual) <= parseInt(minutoFinDato);
+        }
+        return retorno;
+    }
+
+    function compareFn(a, b) {
+        return compareHora(a.horainicio, b.horainicio);
+    }
+
+    function compareHora(a, b) {
+        let horaInicioA = parseInt(a.split(":")[0]);
+        let minutoInicioA = parseInt(a.split(":")[1]);
+
+        let horaInicioB = parseInt(b.split(":")[0]);
+        let minutoInicioB = parseInt(b.split(":")[1]);
+        let retorno = 0;
+
+        if (horaInicioA < horaInicioB) {
+            retorno = -1;
+        } else if (
+            horaInicioA == minutoInicioB &&
+            minutoInicioA < minutoInicioB
+        ) {
+            retorno = -1;
+        } else if (horaInicioA > horaInicioB) {
+            retorno = 1;
+        } else if (
+            horaInicioA == minutoInicioB &&
+            minutoInicioA > minutoInicioB
+        ) {
+            retorno = 1;
+        }
+        console.log(retorno);
+        return retorno;
+    }
+
+    function validar(){
+        let mensaje = "";
+        if(document.getElementById("descripcion").value == ""){
+            mensaje += "Tiene que ingresar una descripcion.\n";
+        }
+        if(document.getElementById("diaselect").value == ""){
+            mensaje += "Tiene que seleccionar un dia de la semana. \n";
+        }
+        if(document.getElementById("horainicio").value == ""){
+            mensaje += "Tiene que ingresar una hora de inicio. \n";
+        }
+        if(document.getElementById("horafin").value == ""){
+            mensaje += "Tiene que ingresar una hora de finalizacion.\n";
+        }
+        if(document.getElementById("estado").value == ""){
+            mensaje += "Tiene que ingresar un estado. \n";
+        }
+
+        if(document.getElementById("horainicio").value != "" && document.getElementById("horafin").value != ""){
+            let horainicio = document.getElementById("horainicio").value;
+            let horafin = document.getElementById("horafin").value;
+            
+            if(compareHora(horainicio, horafin) > 0){
+                mensaje += "La hora de inicio tiene que ser menor a la hora de finalizacion.\n";
+            }
+        }
+        if(mensaje != ""){
+            Toastify({
+            text: mensaje,
+            duration: 3000,
+            destination: "https://github.com/apvarun/toastify-js",
+            newWindow: true,
+            close: true,
+            gravity: "top", // `top` or `bottom`
+            position: "rigth", // `left`, `center` or `right`
+            stopOnFocus: true, // Prevents dismissing of toast on hover
+            style: {
+                background: "var(--color-red-400)",
+            },
+            }).showToast();
+            return false;
+        }else{
+            Toastify({
+                text: "El horario se agrego/actualizo correctamente...",
+                duration: 3000,
+                destination: "https://github.com/apvarun/toastify-js",
+                newWindow: true,
+                close: true,
+                gravity: "top", // `top` or `bottom`
+                position: "rigth", // `left`, `center` or `right`
+                stopOnFocus: true, // Prevents dismissing of toast on hover
+                style: {
+                    background: "linear-gradient(to right, #00b09b, #96c93d)",
+                },
+            }).showToast();
+            return true;
+        }
+    }
+
+    function obtenerFilaVerde(data) {
+        return `
+				<tr class="bg-green-200 px-4 py-1">
+					<td>${data.descripcion}</td>
+					<td>${data.horainicio}</td>
+					<td>${data.horafin}</td>
+					<td>
+						${labelEstado(data.estado)}
+					</td>
+                </tr>
+				`;
+    }
+
+    function obtenerFilaNormal(data) {
+        return `
+				<tr class="bg-gray-100 px-4 py-1">
+					<td>${data.descripcion}</td>
+					<td>${data.horainicio}</td>
+					<td>${data.horafin}</td>
+					<td>
+                        ${labelEstado(data.estado)}
+					</td>
+                    <td>
+                        <button 
+                            class="bg-green-400 hover:bg-green-500 rounded-2xl w-10 h-10 p-2 text-white"
+                            type="button"
+                            onclick="edit(${data.id})"
+                        >
+                            <img src="edit.svg"/>
+                        </button>
+                        
+                        <button 
+                            class="bg-red-400 hover:bg-red-500 rounded-2xl w-10 h-10 p-2 text-center text-white"
+                            type="button"
+                            onclick="remove(${data.id})"
+                        >
+                            <img src="delete.svg"/>
+                        </button>
+                    </td>
+				</tr>
+				`;
+    }
+
+    function labelEstado(estado) {
+        switch (estado) {
+            case "normal":
+                return `<b class="px-4 py-1 rounded-sm bg-green-500 text-gray-100">Normal</b>`;
+                break;
+            case "demorado":
+                return `<b class="px-4 py-1 rounded-sm bg-amber-400 text-gray-100">Demorado</b>`;
+                break;
+            case "cancelado":
+                return `<b class="px-4 py-1 rounded-sm bg-red-400 text-gray-100">Cancelado</b>`;
+                break;
+            case "evento":
+                return `<b class="px-4 py-1 rounded-sm bg-indigo-400 text-gray-100">Evento</b>`;
+                break;
+        }
+    }
+
+    function obtenerNumeroDia(weekday) {
+        const dias = [
+            "domingo",
+            "lunes",
+            "martes",
+            "miércoles",
+            "jueves",
+            "viernes",
+            "sábado",
+        ];
+        return dias.indexOf(weekday.toLowerCase());
+    }
+
+    function obtenerNombreDia(numero) {
+        const dias = [
+            "domingo",
+            "lunes",
+            "martes",
+            "miércoles",
+            "jueves",
+            "viernes",
+            "sábado",
+        ];
+        return dias[numero] || "Número inválido";
+    }
+</script>

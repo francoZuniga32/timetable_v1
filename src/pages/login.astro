@@ -1,0 +1,57 @@
+---
+import Layout from "../layouts/Layout.astro";
+const urlbackend = import.meta.env.PUBLIC_BACKEND;
+
+---
+
+<Layout>
+    <input type="hidden" value={urlbackend} id="urlbackend">
+    <main>
+        <div class="border-2 p-5 rounded-2xl shadow-md">
+            <div class="w-full flex flex-col p-1">
+                <label>Usuario</label>
+                <input
+                    class="w-auto border rounded-sm p-1"
+                    type="text"
+                    id="usuario"
+                />
+            </div>
+            <div class="w-full flex flex-col p-1">
+                <label>Contraseña</label>
+                <input
+                    class="w-auto border rounded-sm p-1"
+                    type="password"
+                    id="pass"
+                />
+            </div>
+            <div class="w-full flex flex-col p-1">
+                <button
+                    class="bg-green-400 hover:bg-green-500 rounded-2xl w-full text-white"
+                    type="button"
+                    onclick="login()">Ingresar</button
+                >
+            </div>
+        </div>
+    </main>
+</Layout>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script is:inline>
+	let backend = document.getElementById("urlbackend").value;
+    
+    function login() {
+        axios
+            .post(`${backend}/auth`, {
+                nombre: document.getElementById("usuario").value,
+                contrasenia: document.getElementById("pass").value,
+            })
+            .then(function (response) {
+                if(response.status == 200){
+                    window.localStorage.setItem("token", response.data.token);
+                    window.location.href = "panel"
+                }
+            })
+            .catch(function (error) {
+                console.log(error);
+            });
+    }
+</script>

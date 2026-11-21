@@ -1,10 +1,22 @@
 version: '3'
 
 services:
-  nginx:
-    image: nginx:latest
+  backend:
+    container_name: backend
+    image: francozuniga32/timetable_v1-backend
+    working_dir: /app
+    volumes:
+      - db_data:/app/src/database/
+    ports:
+      - "3000:3000"
+  
+  front:
+    container_name: front
+    image: francozuniga32/timetable_v1-front
+    environment:
+      - PUBLIC_BACKEND=http://backend:3000
     ports:
       - "80:80"
-    volumes:
-      - ./dist:/usr/share/nginx/html
-    restart: always
+
+volumes:
+  db_data:

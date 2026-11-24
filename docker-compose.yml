@@ -10,7 +10,7 @@ services:
       - "3000:3000"
   
   front:
-    image: francozuniga32/timetable_v1-front
+    image: francozuniga32/timetable_v1-front:1.1
     environment:
       - PUBLIC_BACKEND=http://backend:3000
     ports:

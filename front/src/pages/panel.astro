@@ -111,37 +111,38 @@ const urlbackend = import.meta.env.PUBLIC_BACKEND;
     function agregar() {
         if(validar()){
             
-        const options = {
-            method: "POST",
-            url: `${backend}/horarios`,
-            headers: {
-                "access-token": window.localStorage.getItem("token"),
-                "content-type": "application/json",
-            },
-            data: {
-                descripcion: document.getElementById("descripcion").value,
-                dia: obtenerNombreDia(
-                    document.getElementById("diaselect").value,
-                ),
-                horainicio: document.getElementById("horainicio").value,
-                horafin: document.getElementById("horafin").value,
-                estado: document.getElementById("estado").value,
-            },
-        };
+            const options = {
+                method: "POST",
+                url: `${backend}/horarios`,
+                headers: {
+                    "access-token": window.localStorage.getItem("token"),
+                    "content-type": "application/json",
+                },
+                data: {
+                    descripcion: document.getElementById("descripcion").value,
+                    dia: obtenerNombreDia(
+                        document.getElementById("diaselect").value,
+                    ),
+                    horainicio: document.getElementById("horainicio").value,
+                    horafin: document.getElementById("horafin").value,
+                    estado: document.getElementById("estado").value,
+                },
+            };
 
-        try {
-            axios
-                .request(options)
-                .then(function (response) {
-
-                    filtrarHoy();
-                })
-                .catch(function (error) {
-                    console.log(error);
-                });
-        } catch (error) {
-            console.error(error);
-        }
+            try {
+                axios
+                    .request(options)
+                    .then(function (response) {
+                        consultarHorarios();
+                        limpiarFiltros();
+                        filtrar();
+                    })
+                    .catch(function (error) {
+                        console.log(error);
+                    });
+            } catch (error) {
+                console.error(error);
+            }
         }
     }
 

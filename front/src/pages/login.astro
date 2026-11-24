@@ -47,7 +47,7 @@ const urlbackend = import.meta.env.PUBLIC_BACKEND;
             .then(function (response) {
                 if(response.status == 200){
                     window.localStorage.setItem("token", response.data.token);
-                    window.location.href = "panel"
+                    window.location.href = "/panel";
                 }
             })
             .catch(function (error) {

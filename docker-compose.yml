@@ -2,7 +2,6 @@ version: '3'
 
 services:
   backend:
-    container_name: backend
     image: francozuniga32/timetable_v1-backend
     working_dir: /app
     volumes:
@@ -11,7 +10,6 @@ services:
       - "3000:3000"
   
   front:
-    container_name: front
     image: francozuniga32/timetable_v1-front
     environment:
       - PUBLIC_BACKEND=http://backend:3000

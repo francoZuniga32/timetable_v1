@@ -2,7 +2,6 @@ version: '3'
 
 services:
   backend:
-    container_name: backend
     build:
       context: ./back
       dockerfile: Dockerfile
@@ -11,7 +10,6 @@ services:
       - "3000:3000"
   
   front:
-    container_name: front
     build:
       context: ./front
       dockerfile: Dockerfile
